@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Redis 源码中有哪些巧妙的设计，举几个典型的例子 | Code XFFF</title><meta name="author" content="03xfff"><meta name="copyright" content="03xfff"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="5个方面线程模型、数据结构、共享对象池、过期设计、数据持久化设计 一、线程模型Redis 使用单线程模型来处理所有的客户端请求。 虽然看似单线程简单，但这种设计减少了上下文切换和锁的开销，避免了多线程编程中的复杂性。 并且通过多路复用（epoll、select 等）+ 事件驱动机制，Redis 仍然能够处理大量的并发连接。 二、数据结构Redis 对很多数据结构进行了优化，例如 sds、zipli">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 源码中有哪些巧妙的设计，举几个典型的例子">
+<meta property="og:url" content="http://example.com/2025/06/04/Redis-%E6%BA%90%E7%A0%81%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A7%E5%A6%99%E7%9A%84%E8%AE%BE%E8%AE%A1%EF%BC%8C%E4%B8%BE%E5%87%A0%E4%B8%AA%E5%85%B8%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90/index.html">
+<meta property="og:site_name" content="Code XFFF">
+<meta property="og:description" content="5个方面线程模型、数据结构、共享对象池、过期设计、数据持久化设计 一、线程模型Redis 使用单线程模型来处理所有的客户端请求。 虽然看似单线程简单，但这种设计减少了上下文切换和锁的开销，避免了多线程编程中的复杂性。 并且通过多路复用（epoll、select 等）+ 事件驱动机制，Redis 仍然能够处理大量的并发连接。 二、数据结构Redis 对很多数据结构进行了优化，例如 sds、zipli">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/redis.png">
+<meta property="article:published_time" content="2025-06-04T11:18:51.000Z">
+<meta property="article:modified_time" content="2025-06-04T13:03:57.803Z">
+<meta property="article:author" content="03xfff">
+<meta property="article:tag" content="java, python, javascript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/redis.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Redis 源码中有哪些巧妙的设计，举几个典型的例子",
+  "url": "http://example.com/2025/06/04/Redis-%E6%BA%90%E7%A0%81%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A7%E5%A6%99%E7%9A%84%E8%AE%BE%E8%AE%A1%EF%BC%8C%E4%B8%BE%E5%87%A0%E4%B8%AA%E5%85%B8%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90/",
+  "image": "http://example.com/images/redis.png",
+  "datePublished": "2025-06-04T11:18:51.000Z",
+  "dateModified": "2025-06-04T13:03:57.803Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "03xfff",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/gogo.svg"><link rel="canonical" href="http://example.com/2025/06/04/Redis-%E6%BA%90%E7%A0%81%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A7%E5%A6%99%E7%9A%84%E8%AE%BE%E8%AE%A1%EF%BC%8C%E4%B8%BE%E5%87%A0%E4%B8%AA%E5%85%B8%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Redis 源码中有哪些巧妙的设计，举几个典型的例子',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load', preloader.endLoading)
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/atvi.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">12</div></a><a href="/blog/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-coffee"></i><span> Java</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/java/core/"><i class="fa-fw fas fa-code"></i><span> Java核心</span></a></li><li><a class="site-page child" href="/blog/java/collections/"><i class="fa-fw fas fa-layer-group"></i><span> 集合框架</span></a></li><li><a class="site-page child" href="/blog/java/juc/"><i class="fa-fw fas fa-microchip"></i><span> JUC并发</span></a></li><li><a class="site-page child" href="/blog/java/jvm/"><i class="fa-fw fas fa-cogs"></i><span> JVM体系</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-memory"></i><span> Redis</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/redis/data-structures/"><i class="fa-fw fas fa-shapes"></i><span> 数据结构</span></a></li><li><a class="site-page child" href="/blog/redis/persistence/"><i class="fa-fw fas fa-save"></i><span> 持久化</span></a></li><li><a class="site-page child" href="/blog/redis/cluster/"><i class="fa-fw fas fa-network-wired"></i><span> 高可用</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-database"></i><span> MySQL</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/mysql/optimization/"><i class="fa-fw fas fa-tachometer-alt"></i><span> SQL优化</span></a></li><li><a class="site-page child" href="/blog/mysql/indexes/"><i class="fa-fw fas fa-search-plus"></i><span> 索引原理</span></a></li><li><a class="site-page child" href="/blog/mysql/transactions/"><i class="fa-fw fas fa-exchange-alt"></i><span> 事务机制</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fab fa-java"></i><span> Spring</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/spring/framework/"><i class="fa-fw fas fa-leaf"></i><span> Spring框架</span></a></li><li><a class="site-page child" href="/blog/spring/boot/"><i class="fa-fw fas fa-bolt"></i><span> SpringBoot</span></a></li><li><a class="site-page child" href="/blog/spring/cloud/"><i class="fa-fw fas fa-cloud"></i><span> SpringCloud</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-tools"></i><span> 工具</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/tools/git/"><i class="fa-fw fab fa-git-alt"></i><span> Git</span></a></li><li><a class="site-page child" href="/blog/tools/linux/"><i class="fa-fw fab fa-linux"></i><span> Linux</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/xfff1.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.gif" alt="Logo"><span class="site-name">Code XFFF</span></a><a class="nav-page-title" href="/"><span class="site-name">Redis 源码中有哪些巧妙的设计，举几个典型的例子</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-coffee"></i><span> Java</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/java/core/"><i class="fa-fw fas fa-code"></i><span> Java核心</span></a></li><li><a class="site-page child" href="/blog/java/collections/"><i class="fa-fw fas fa-layer-group"></i><span> 集合框架</span></a></li><li><a class="site-page child" href="/blog/java/juc/"><i class="fa-fw fas fa-microchip"></i><span> JUC并发</span></a></li><li><a class="site-page child" href="/blog/java/jvm/"><i class="fa-fw fas fa-cogs"></i><span> JVM体系</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-memory"></i><span> Redis</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/redis/data-structures/"><i class="fa-fw fas fa-shapes"></i><span> 数据结构</span></a></li><li><a class="site-page child" href="/blog/redis/persistence/"><i class="fa-fw fas fa-save"></i><span> 持久化</span></a></li><li><a class="site-page child" href="/blog/redis/cluster/"><i class="fa-fw fas fa-network-wired"></i><span> 高可用</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-database"></i><span> MySQL</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/mysql/optimization/"><i class="fa-fw fas fa-tachometer-alt"></i><span> SQL优化</span></a></li><li><a class="site-page child" href="/blog/mysql/indexes/"><i class="fa-fw fas fa-search-plus"></i><span> 索引原理</span></a></li><li><a class="site-page child" href="/blog/mysql/transactions/"><i class="fa-fw fas fa-exchange-alt"></i><span> 事务机制</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fab fa-java"></i><span> Spring</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/spring/framework/"><i class="fa-fw fas fa-leaf"></i><span> Spring框架</span></a></li><li><a class="site-page child" href="/blog/spring/boot/"><i class="fa-fw fas fa-bolt"></i><span> SpringBoot</span></a></li><li><a class="site-page child" href="/blog/spring/cloud/"><i class="fa-fw fas fa-cloud"></i><span> SpringCloud</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-tools"></i><span> 工具</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/tools/git/"><i class="fa-fw fab fa-git-alt"></i><span> Git</span></a></li><li><a class="site-page child" href="/blog/tools/linux/"><i class="fa-fw fab fa-linux"></i><span> Linux</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Redis 源码中有哪些巧妙的设计，举几个典型的例子</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-04T11:18:51.000Z" title="发表于 2025-06-04 19:18:51">2025-06-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-06-04T13:03:57.803Z" title="更新于 2025-06-04 21:03:57">2025-06-04</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/blog/redis/">redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="5个方面"><a href="#5个方面" class="headerlink" title="5个方面"></a>5个方面</h1><p><strong>线程模型、数据结构、共享对象池、过期设计、数据持久化设计</strong></p>
+<h2 id="一、线程模型"><a href="#一、线程模型" class="headerlink" title="一、线程模型"></a>一、线程模型</h2><p>Redis 使用<strong>单线程模型</strong>来处理所有的客户端请求。</p>
+<p>虽然看似单线程简单，但这种设计减少了上下文切换和锁的开销，避免了多线程编程中的复杂性。</p>
+<p>并且通过<strong>多路复用</strong>（epoll、select 等）+ <strong>事件驱动</strong>机制，Redis 仍然能够处理大量的并发连接。</p>
+<h2 id="二、数据结构"><a href="#二、数据结构" class="headerlink" title="二、数据结构"></a>二、数据结构</h2><p>Redis 对很多数据结构进行了优化，例如 sds、ziplist，还有哈希表的扩容机制。</p>
+<h3 id="SDS-Simple-Dynamic-String"><a href="#SDS-Simple-Dynamic-String" class="headerlink" title="SDS(Simple Dynamic String)"></a>SDS(Simple Dynamic String)</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">attribute__</span> ((__<span class="title">packed__</span>)) <span class="title">sdshdr16</span> &#123;</span></span><br><span class="line">    <span class="type">uint16_t</span> len; <span class="comment">/* used */</span></span><br><span class="line">    <span class="type">uint16_t</span> alloc; <span class="comment">/* excluding the header and null terminator */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> flags; <span class="comment">/* 3 lsb of type, 5 unused bits */</span></span><br><span class="line">    <span class="type">char</span> buf[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol>
+<li><strong>动态扩展和空间预分配</strong>：SDS 支持自动扩展。当字符串长度增加时，SDS 会自动分配更大的内存空间，并且通常会额外预留一部分空间，减少频繁的内存分配操作，这样就避免了每次修改字符串时都需要重新分配内存的开销。</li>
+<li><strong>二进制安全:</strong>  与 C 字符串不同，SDS 支持存储二进制数据，因为它不会依赖于空字符（’\0’）来标识字符串的结束。这使得 SDS 可以安全地存储和处理任意二进制数据。</li>
+<li><strong>常数时间获取字符串的长度</strong> ：SDS 结构中会额外存储字符串的当前长度，这使得获取字符串长度的操作可以在 O(1) 时间内完成，而不像 C 字符串那样需要遍历整个字符串来计算长度。</li>
+<li><strong>防止缓冲区溢出</strong>：SDS 通过维护分配空间的总长度和已用长度，能够有效防止缓冲区溢出问题。这在使用 C 字符串时是一个常见的安全隐患，但在 SDS 中得到了很好解决。</li>
+<li><strong>惰性空间释放</strong> ： 当 SDS 中的字符串长度缩短时，并不会立即缩减内存空间，而是会保留部分缩短后的空间，这样可以避免频繁的内存重新分配操作。这种策略也是 Redis 的内存优化的一部分。</li>
+</ol>
+<h3 id="ziplist-压缩列表"><a href="#ziplist-压缩列表" class="headerlink" title="ziplist(压缩列表)"></a>ziplist(压缩列表)</h3><p>压缩列表（ziplist）是 Redis 用于实现列表和哈希表的底层数据结构之一。</p>
+<p>当列表或哈希表中的数据量较小，且元素长度较短时，Redis 会选择使用压缩列表来存储数据，<strong>达到节省内存消耗的目的</strong>。</p>
+<p>关键设计如下：</p>
+<ul>
+<li><p>内存紧凑：压缩列表将所有元素紧凑地存储在一段连续的内存空间中，没有指针等额外开销。每个元素前都有一个前向编码和后向编码，用于指示前一个元素的长度，这样可以快速地进行前后遍历，避免了链表中指针的额外开销。</p>
+</li>
+<li><p>灵活性：压缩列表根据存储的元素长度动态调整编码方式，小于 1 字节的整数、1 字节的整数、3 字节的整数等不同长度的编码方式，能够极大地节省内存。</p>
+</li>
+<li><p>性能与空间的平衡：当列表或哈希表变得很大时，Redis 会自动切换到更高效的链表或哈希表结构。这种按需调整的数据结构设计，确保了在不同场景下的性能最优。</p>
+<h4 id="整体结构布局"><a href="#整体结构布局" class="headerlink" title="整体结构布局"></a>整体结构布局</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">area |&lt;---- ziplist header ----&gt;|&lt;----------- entries -------------&gt;|&lt;-end-&gt;|</span><br><span class="line">size    4 bytes  4 bytes  2 bytes      ?        ?        ?      1 byte</span><br><span class="line">    +---------+--------+-------+--------+--------+--------+-------+</span><br><span class="line">    | zlbytes | zltail | zllen | entry1 | entry2 | ...    | zlend |</span><br><span class="line">    +---------+--------+-------+--------+--------+--------+-------+</span><br></pre></td></tr></table></figure>
+
+<p>####Header 部分详解</p>
+<table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>长度&#x2F;类型</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>zlbytes</td>
+<td>uint32_t (4字节)</td>
+<td>整个 ziplist 占用的内存字节数，用于内存重分配和计算末端</td>
+</tr>
+<tr>
+<td>zltail</td>
+<td>uint32_t (4字节)</td>
+<td>到达 ziplist 表尾节点的偏移量，可以直接定位到尾节点</td>
+</tr>
+<tr>
+<td>zllen</td>
+<td>uint16_t (2字节)</td>
+<td>ziplist 中节点的数量。当值小于 65535 时为实际数量；等于 65535 时需要遍历计算</td>
+</tr>
+<tr>
+<td>zlend</td>
+<td>uint8_t (1字节)</td>
+<td>值为 255(0xFF)，标记 ziplist 的末端</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* We use this function to receive information about a ziplist entry.</span></span><br><span class="line"><span class="comment"> * Note that this is not how the data is actually encoded, is just what we</span></span><br><span class="line"><span class="comment"> * get filled by a function in order to operate more easily. */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zlentry</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> prevrawlensize; <span class="comment">/* Bytes used to encode the previous entry len*/</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> prevrawlen;     <span class="comment">/* Previous entry len. */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> lensize;        <span class="comment">/* Bytes used to encode this entry type/len.</span></span><br><span class="line"><span class="comment">                                    For example strings have a 1, 2 or 5 bytes</span></span><br><span class="line"><span class="comment">                                    header. Integers always use a single byte.*/</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> len;            <span class="comment">/* Bytes used to represent the actual entry.</span></span><br><span class="line"><span class="comment">                                    For strings this is just the string length</span></span><br><span class="line"><span class="comment">                                    while for integers it is 1, 2, 3, 4, 8 or</span></span><br><span class="line"><span class="comment">                                    0 (for 4 bit immediate) depending on the</span></span><br><span class="line"><span class="comment">                                    number range. */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> headersize;     <span class="comment">/* prevrawlensize + lensize. */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> encoding;      <span class="comment">/* Set to ZIP_STR_* or ZIP_INT_* depending on</span></span><br><span class="line"><span class="comment">                                    the entry encoding. However for 4 bits</span></span><br><span class="line"><span class="comment">                                    immediate integers this can assume a range</span></span><br><span class="line"><span class="comment">                                    of values and must be range-checked. */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> *p;            <span class="comment">/* Pointer to the very start of the entry, that</span></span><br><span class="line"><span class="comment">                                    is, this points to prev-entry-len field. */</span></span><br><span class="line">&#125; zlentry;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="渐进式-rehash"><a href="#渐进式-rehash" class="headerlink" title="渐进式 rehash"></a>渐进式 rehash</h4><p>Redis 的哈希表在扩容或缩容时不会一次性进行全量 rehash。</p>
+<p>相反，它采取了<strong>渐进式 rehash 的方式</strong>，将 rehash 操作分摊到后续的增删改查操作中，从而避免了集中的性能抖动。</p>
+<h2 id="共享对象池"><a href="#共享对象池" class="headerlink" title="共享对象池"></a>共享对象池</h2><p>Redis 中有许多常用的小整数，例如 0 到 9999。这些整数频繁地出现在各种命令和数据操作中。</p>
+<p>为了减少内存分配和释放的开销，Redis 使用了 <strong>共享对象池（Shared Object Pool）</strong>，实现了：</p>
+<ul>
+<li><p>对象复用：对于常用的小整数，Redis 会在启动时预先创建这些对象，并将它们存储在一个共享对象池中。当系统需要这些整数对象时，直接从池中获取，而不需要重复分配内存。这大大减少了内存分配和释放的开销，提高了系统的效率。</p>
+</li>
+<li><p>内存节省：共享对象池有效地节省了内存，尤其是在大规模使用这些常量的场景中。通过对象复用，避免了频繁的内存申请和垃圾回收。</p>
+</li>
+</ul>
+<h2 id="过期设计"><a href="#过期设计" class="headerlink" title="过期设计"></a>过期设计</h2><p>Redis 支持为键设置过期时间。当键过期后，它应该被自动删除。</p>
+<p>然而，过期键的处理需要在性能和准确性之间找到平衡。Redis 采用了一种 <strong>惰性删除与定期删除相结合的策略</strong> 来处理过期键：</p>
+<ul>
+<li>惰性删除：当客户端访问一个键时，Redis 会检查该键是否已经过期。如果过期，则立即删除。这种方式不会增加系统负担，因为只在访问时才检查键的状态。</li>
+<li>定期删除：Redis 每隔一段时间会随机抽取一部分键进行过期检查，并删除其中已过期的键。通过这种方式，Redis 可以避免系统中大量存在过期键而无法及时清理的情况。</li>
+</ul>
+<p>惰性删除确保访问性能，定期删除避免内存泄漏。通过惰性删除和定期删除相结合，Redis 实现了过期键的高效管理。</p>
+<h2 id="数据持久化：AOF-重写机制"><a href="#数据持久化：AOF-重写机制" class="headerlink" title="数据持久化：AOF 重写机制"></a>数据持久化：AOF 重写机制</h2><p>AOF（Append Only File） 是 Redis 的一种数据持久化方式。</p>
+<p>Redis 会将所有写操作以追加的方式记录到 AOF 文件中，以保证数据的安全性。然而，<strong>随着时间推移，AOF 文件可能会变得非常大</strong>，影响恢复速度。</p>
+<p>为了解决这个问题，Redis 引入了 <strong>AOF 重写（AOF Rewrite）</strong> 机制：</p>
+<ul>
+<li>增量重写：AOF 重写并不会中断正常的写操作。在重写期间，Redis 仍然可以将新的写操作继续追加到旧的 AOF 文件中，确保了高并发写入时的持久化性能。</li>
+<li>空间优化：AOF 重写过程中，Redis 并不会简单地复制所有命令，而是根据当前的数据状态，生成最精简的命令集。即使一个键值经过多次修改，最终的 AOF 文件中只会保留一条最有效的命令，从而大幅减少了文件大小。</li>
+<li>异步执行：AOF 重写是通过子进程异步执行的，主进程不会受到影响，这保证了在执行重写的同时，Redis 仍然可以提供高效的服务。</li>
+</ul>
+<p>😂😂😂</p>
+</article><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/images/redis.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/06/04/Redis-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B9%88%E5%BF%AB/" title="Redis 为什么这么快?"><img class="cover" src="/images/redis.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Redis 为什么这么快?</div></div><div class="info-2"><div class="info-item-1"> 主要有 3 个方面的原因，分别是存储方式、优秀的线程模型以及 IO 模型、高效的数据结构。 Redis 将数据存储在内存中，提供快速的读写速度，相比于传统的磁盘数据库，内存访问速度快得多。 Redis 使用单线程事件驱动模型结合 I&#x2F;O 多路复用，避免了多线程上下文切换和竞争条件，提高了并发处理效率。 Redis 提供多种高效的数据结构（如字符串、哈希、列表、集合等），这些结构经过优化，能够快速完成各种操作  </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/atvi.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">03xfff</div><div class="author-info-description">天行健，君子以自强不息。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">12</div></a><a href="/blog/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/0607pass" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:03xfff@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#5%E4%B8%AA%E6%96%B9%E9%9D%A2"><span class="toc-number">1.</span> <span class="toc-text">5个方面</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.1.</span> <span class="toc-text">一、线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">二、数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SDS-Simple-Dynamic-String"><span class="toc-number">1.2.1.</span> <span class="toc-text">SDS(Simple Dynamic String)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ziplist-%E5%8E%8B%E7%BC%A9%E5%88%97%E8%A1%A8"><span class="toc-number">1.2.2.</span> <span class="toc-text">ziplist(压缩列表)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84%E5%B8%83%E5%B1%80"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">整体结构布局</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B8%90%E8%BF%9B%E5%BC%8F-rehash"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">渐进式 rehash</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%AF%B9%E8%B1%A1%E6%B1%A0"><span class="toc-number">1.3.</span> <span class="toc-text">共享对象池</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%87%E6%9C%9F%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.4.</span> <span class="toc-text">过期设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96%EF%BC%9AAOF-%E9%87%8D%E5%86%99%E6%9C%BA%E5%88%B6"><span class="toc-number">1.5.</span> <span class="toc-text">数据持久化：AOF 重写机制</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/06/04/Redis-%E6%BA%90%E7%A0%81%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A7%E5%A6%99%E7%9A%84%E8%AE%BE%E8%AE%A1%EF%BC%8C%E4%B8%BE%E5%87%A0%E4%B8%AA%E5%85%B8%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90/" title="Redis 源码中有哪些巧妙的设计，举几个典型的例子"><img src="/images/redis.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Redis 源码中有哪些巧妙的设计，举几个典型的例子"/></a><div class="content"><a class="title" href="/2025/06/04/Redis-%E6%BA%90%E7%A0%81%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A7%E5%A6%99%E7%9A%84%E8%AE%BE%E8%AE%A1%EF%BC%8C%E4%B8%BE%E5%87%A0%E4%B8%AA%E5%85%B8%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90/" title="Redis 源码中有哪些巧妙的设计，举几个典型的例子">Redis 源码中有哪些巧妙的设计，举几个典型的例子</a><time datetime="2025-06-04T11:18:51.000Z" title="发表于 2025-06-04 19:18:51">2025-06-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/04/Redis-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B9%88%E5%BF%AB/" title="Redis 为什么这么快?"><img src="/images/redis.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Redis 为什么这么快?"/></a><div class="content"><a class="title" href="/2025/06/04/Redis-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B9%88%E5%BF%AB/" title="Redis 为什么这么快?">Redis 为什么这么快?</a><time datetime="2025-06-04T10:55:07.000Z" title="发表于 2025-06-04 18:55:07">2025-06-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/04/MySQL%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E7%B4%A2%E5%BC%95%EF%BC%8C%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95%E5%92%8C%E4%B8%BB%E9%94%AE%E7%B4%A2%E5%BC%95%E7%9A%84%E5%8C%BA%E5%88%AB/" title="MySQL中有哪些索引，唯一索引和主键索引的区别"><img src="/images/mysql/mysql.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MySQL中有哪些索引，唯一索引和主键索引的区别"/></a><div class="content"><a class="title" href="/2025/06/04/MySQL%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E7%B4%A2%E5%BC%95%EF%BC%8C%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95%E5%92%8C%E4%B8%BB%E9%94%AE%E7%B4%A2%E5%BC%95%E7%9A%84%E5%8C%BA%E5%88%AB/" title="MySQL中有哪些索引，唯一索引和主键索引的区别">MySQL中有哪些索引，唯一索引和主键索引的区别</a><time datetime="2025-06-04T07:31:21.000Z" title="发表于 2025-06-04 15:31:21">2025-06-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/02/Java-%E4%B8%AD-Thread-sleep-0-%E6%9C%89%E6%84%8F%E4%B9%89%E5%90%97%EF%BC%9F/" title="Java 中 Thread.sleep(0) 有意义吗？"><img src="/images/java/juc-cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java 中 Thread.sleep(0) 有意义吗？"/></a><div class="content"><a class="title" href="/2025/06/02/Java-%E4%B8%AD-Thread-sleep-0-%E6%9C%89%E6%84%8F%E4%B9%89%E5%90%97%EF%BC%9F/" title="Java 中 Thread.sleep(0) 有意义吗？">Java 中 Thread.sleep(0) 有意义吗？</a><time datetime="2025-06-02T08:23:09.000Z" title="发表于 2025-06-02 16:23:09">2025-06-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/02/%E7%9C%8B%E4%BD%A0%E7%AE%80%E5%8E%86%E5%86%99%E7%B2%BE%E9%80%9Ajuc%E5%95%8A%EF%BC%8C%E9%82%A3%E4%BD%A0%E8%AE%B2%E4%B8%80%E8%AE%B2Java%E4%B8%AD%E7%9A%84%E9%94%81/" title="看你简历写精通juc啊，那你讲一讲Java中的锁"><img src="/images/java/juc-cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="看你简历写精通juc啊，那你讲一讲Java中的锁"/></a><div class="content"><a class="title" href="/2025/06/02/%E7%9C%8B%E4%BD%A0%E7%AE%80%E5%8E%86%E5%86%99%E7%B2%BE%E9%80%9Ajuc%E5%95%8A%EF%BC%8C%E9%82%A3%E4%BD%A0%E8%AE%B2%E4%B8%80%E8%AE%B2Java%E4%B8%AD%E7%9A%84%E9%94%81/" title="看你简历写精通juc啊，那你讲一讲Java中的锁">看你简历写精通juc啊，那你讲一讲Java中的锁</a><time datetime="2025-06-02T07:56:54.000Z" title="发表于 2025-06-02 15:56:54">2025-06-02</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2024 - 2025 By 03xfff</span></div><div class="footer_custom_text"><img src="https://haiyong.site/img/icp.png"><a href="https://beian.miit.gov.cn/#/Integrated/index" style="color:black" target="_blank">xICP备xxx号-1(你的icp备案号)</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
