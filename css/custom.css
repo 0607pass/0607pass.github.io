@@ -1,0 +1,37 @@
+/* 底部栏背景颜色 */
+#footer {
+  background: linear-gradient(to right, #dee3e7 0%, #b3ddaf 100%);  /* 渐变背景 */
+  color: #ffffff;  /* 文字颜色 */
+  padding: 20px 0;  /* 内边距 */
+}
+
+/* 底部栏链接颜色 */
+#footer a {
+  color: #ffffff !important;  /* 链接颜色 */
+  transition: all 0.3s ease-in-out;  /* 过渡效果 */
+}
+
+/* 底部栏链接悬停效果 */
+#footer a:hover {
+  color: #f0f0f0 !important;  /* 悬停时的颜色 */
+  text-decoration: underline;  /* 添加下划线 */
+}
+
+/* 版权信息样式 */
+#footer .copyright {
+  color: #ffffff;  /* 版权信息文字颜色 */
+}
+
+/* 框架信息样式 */
+#footer .framework-info {
+  color: #ffffff;  /* 框架信息文字颜色 */
+}
+
+/* ICP备案信息样式 */
+#footer .custom-text img {
+  filter: brightness(100);  /* 使图标变白 */
+}
+
+#footer .custom-text a {
+  color: #ffffff !important;  /* ICP链接颜色 */
+}
