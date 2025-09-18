@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Code XFFF</title><meta name="author" content="03xfff"><meta name="copyright" content="03xfff"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="天行健，君子以自强不息。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Code XFFF">
+<meta property="og:url" content="http://localhost:5000/page/3/">
+<meta property="og:site_name" content="Code XFFF">
+<meta property="og:description" content="天行健，君子以自强不息。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://test.1520223861.top/blog/%E5%A4%B4%E5%83%8F.jpg">
+<meta property="article:author" content="03xfff">
+<meta property="article:tag" content="java, python, javascript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://test.1520223861.top/blog/%E5%A4%B4%E5%83%8F.jpg"><link rel="shortcut icon" href="https://test.1520223861.top/blog/gogo.svg"><link rel="canonical" href="http://localhost:5000/page/3/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Code XFFF',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 7.3.0"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://test.1520223861.top/blog/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a><a href="/blog/"><div class="headline">分类</div><div class="length-num">12</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-coffee"></i><span> Java</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/java/core/"><i class="fa-fw fas fa-code"></i><span> Java基础</span></a></li><li><a class="site-page child" href="/blog/java/collections/"><i class="fa-fw fas fa-layer-group"></i><span> Java集合</span></a></li><li><a class="site-page child" href="/blog/java/juc/"><i class="fa-fw fas fa-microchip"></i><span> Java并发</span></a></li><li><a class="site-page child" href="/blog/java/jvm/"><i class="fa-fw fas fa-cogs"></i><span> JVM</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-leaf"></i><span> Spring</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/spring/mvc/"><i class="fa-fw fas fa-network-wired"></i><span> SpringMVC</span></a></li><li><a class="site-page child" href="/blog/spring/framework/"><i class="fa-fw fas fa-cube"></i><span> SpringFrame</span></a></li><li><a class="site-page child" href="/blog/spring/boot/"><i class="fa-fw fas fa-rocket"></i><span> SpringBoot</span></a></li><li><a class="site-page child" href="/blog/spring/cloud-alibaba/"><i class="fa-fw fas fa-cloud"></i><span> SpringCloudAlibaba</span></a></li><li><a class="site-page child" href="/blog/spring/ai/"><i class="fa-fw fas fa-brain"></i><span> SpringAI</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/blog/redis/"><i class="fa-fw fas fa-memory"></i><span> Redis</span></a></div><div class="menus_item"><a class="site-page" href="/blog/mysql/"><i class="fa-fw fas fa-database"></i><span> MySQL</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-envelope"></i><span> 消息队列</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/mq/rabbitmq/"><i class="fa-fw fas fa-rabbit"></i><span> RabbitMQ</span></a></li><li><a class="site-page child" href="/blog/mq/rocketmq/"><i class="fa-fw fas fa-rocket"></i><span> RocketMQ</span></a></li><li><a class="site-page child" href="/blog/mq/kafka/"><i class="fa-fw fas fa-stream"></i><span> Kafka</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-cogs"></i><span> 其他技术</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/other/linux/"><i class="fa-fw fab fa-linux"></i><span> Linux</span></a></li><li><a class="site-page child" href="/blog/other/docker/"><i class="fa-fw fab fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/blog/other/nginx/"><i class="fa-fw fas fa-server"></i><span> Nginx</span></a></li><li><a class="site-page child" href="/blog/other/git/"><i class="fa-fw fab fa-git-alt"></i><span> Git</span></a></li><li><a class="site-page child" href="/blog/other/maven/"><i class="fa-fw fas fa-box"></i><span> Maven</span></a></li><li><a class="site-page child" href="/blog/other/"><i class="fa-fw fas fa-ellipsis-h"></i><span> 其他</span></a></li></ul></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(https://test.1520223861.top/blog/%E8%83%8C%E6%99%AF.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="https://test.1520223861.top/blog/logo.gif" alt="Logo"><span class="site-name">Code XFFF</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-coffee"></i><span> Java</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/java/core/"><i class="fa-fw fas fa-code"></i><span> Java基础</span></a></li><li><a class="site-page child" href="/blog/java/collections/"><i class="fa-fw fas fa-layer-group"></i><span> Java集合</span></a></li><li><a class="site-page child" href="/blog/java/juc/"><i class="fa-fw fas fa-microchip"></i><span> Java并发</span></a></li><li><a class="site-page child" href="/blog/java/jvm/"><i class="fa-fw fas fa-cogs"></i><span> JVM</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-leaf"></i><span> Spring</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/spring/mvc/"><i class="fa-fw fas fa-network-wired"></i><span> SpringMVC</span></a></li><li><a class="site-page child" href="/blog/spring/framework/"><i class="fa-fw fas fa-cube"></i><span> SpringFrame</span></a></li><li><a class="site-page child" href="/blog/spring/boot/"><i class="fa-fw fas fa-rocket"></i><span> SpringBoot</span></a></li><li><a class="site-page child" href="/blog/spring/cloud-alibaba/"><i class="fa-fw fas fa-cloud"></i><span> SpringCloudAlibaba</span></a></li><li><a class="site-page child" href="/blog/spring/ai/"><i class="fa-fw fas fa-brain"></i><span> SpringAI</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/blog/redis/"><i class="fa-fw fas fa-memory"></i><span> Redis</span></a></div><div class="menus_item"><a class="site-page" href="/blog/mysql/"><i class="fa-fw fas fa-database"></i><span> MySQL</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-envelope"></i><span> 消息队列</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/mq/rabbitmq/"><i class="fa-fw fas fa-rabbit"></i><span> RabbitMQ</span></a></li><li><a class="site-page child" href="/blog/mq/rocketmq/"><i class="fa-fw fas fa-rocket"></i><span> RocketMQ</span></a></li><li><a class="site-page child" href="/blog/mq/kafka/"><i class="fa-fw fas fa-stream"></i><span> Kafka</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-cogs"></i><span> 其他技术</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/blog/other/linux/"><i class="fa-fw fab fa-linux"></i><span> Linux</span></a></li><li><a class="site-page child" href="/blog/other/docker/"><i class="fa-fw fab fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/blog/other/nginx/"><i class="fa-fw fas fa-server"></i><span> Nginx</span></a></li><li><a class="site-page child" href="/blog/other/git/"><i class="fa-fw fab fa-git-alt"></i><span> Git</span></a></li><li><a class="site-page child" href="/blog/other/maven/"><i class="fa-fw fas fa-box"></i><span> Maven</span></a></li><li><a class="site-page child" href="/blog/other/"><i class="fa-fw fas fa-ellipsis-h"></i><span> 其他</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Code XFFF</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="https://github.com/0607pass" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:03xfff@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc masonry" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover"><a href="/blog/Java/core/java/java-core-1/" title="Java核心概念详解"><img class="post-bg" src="/images/java/java-core-cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java核心概念详解"></a></div><div class="recent-post-info"><a class="article-title" href="/blog/Java/core/java/java-core-1/" title="Java核心概念详解">Java核心概念详解</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-03-20T02:00:00.000Z" title="发表于 2024-03-20 10:00:00">2024-03-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/blog/Java/">Java</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/blog/Java/core/">core</a></span></div><div class="content">Java核心概念详解 Java作为一门面向对象的编程语言，其核心概念包括： 1. 面向对象特性  封装 继承 多态 抽象  2. 基本数据类型  整数类型 浮点类型 字符类型 布尔类型  3. 集合框架  List Set Map Queue  4. 异常处理  异常体系 try-catch-finally throws关键字 自定义异常  </div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/2/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/#content-inner">2</a><span class="page-number current">3</span></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://test.1520223861.top/blog/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">03xfff</div><div class="author-info-description">天行健，君子以自强不息。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a><a href="/blog/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/0607pass"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/0607pass" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:03xfff@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/blog/redis/redis/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" title="什么是布隆过滤器，误判怎么办？"><img src="https://test.1520223861.top/blog/cover/redis.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="什么是布隆过滤器，误判怎么办？"/></a><div class="content"><a class="title" href="/blog/redis/redis/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" title="什么是布隆过滤器，误判怎么办？">什么是布隆过滤器，误判怎么办？</a><time datetime="2025-09-18T09:59:34.000Z" title="发表于 2025-09-18 17:59:34">2025-09-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/blog/mq/rocketmq-rabbitmq-kafka/mq/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%A9%B6%E7%AB%9F%E6%98%AF%E6%8E%A8%E6%B6%88%E6%81%AF%E8%BF%98%E6%98%AF%E6%8B%89%E6%B6%88%E6%81%AF/" title="消息队列究竟是推消息还是拉消息"><img src="https://test.1520223861.top/blog/cover/mq-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="消息队列究竟是推消息还是拉消息"/></a><div class="content"><a class="title" href="/blog/mq/rocketmq-rabbitmq-kafka/mq/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%A9%B6%E7%AB%9F%E6%98%AF%E6%8E%A8%E6%B6%88%E6%81%AF%E8%BF%98%E6%98%AF%E6%8B%89%E6%B6%88%E6%81%AF/" title="消息队列究竟是推消息还是拉消息">消息队列究竟是推消息还是拉消息</a><time datetime="2025-09-16T13:29:50.000Z" title="发表于 2025-09-16 21:29:50">2025-09-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/blog/uncategorized/mq/mq/" title="消息队列"><img src="https://test.1520223861.top/blog/cover/mq-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="消息队列"/></a><div class="content"><a class="title" href="/blog/uncategorized/mq/mq/" title="消息队列">消息队列</a><time datetime="2025-09-14T16:00:00.000Z" title="发表于 2025-09-15 00:00:00">2025-09-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/blog/mysql/mysql/MySQL%E7%9A%84%E5%B8%B8%E8%A7%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" title="MySQL的常见性能优化"><img src="https://test.1520223861.top/blog/cover/mysql.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MySQL的常见性能优化"/></a><div class="content"><a class="title" href="/blog/mysql/mysql/MySQL%E7%9A%84%E5%B8%B8%E8%A7%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" title="MySQL的常见性能优化">MySQL的常见性能优化</a><time datetime="2025-07-24T09:48:13.000Z" title="发表于 2025-07-24 17:48:13">2025-07-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/blog/redis/redis/%E8%AE%B2%E4%B8%80%E8%AE%B2Redis%E4%B8%AD%E8%B7%B3%E8%A1%A8/" title="讲一讲Redis中跳表"><img src="https://test.1520223861.top/blog/cover/redis.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="讲一讲Redis中跳表"/></a><div class="content"><a class="title" href="/blog/redis/redis/%E8%AE%B2%E4%B8%80%E8%AE%B2Redis%E4%B8%AD%E8%B7%B3%E8%A1%A8/" title="讲一讲Redis中跳表">讲一讲Redis中跳表</a><time datetime="2025-07-13T07:40:41.000Z" title="发表于 2025-07-13 15:40:41">2025-07-13</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2024 - 2025 By 03xfff</span></div><div class="footer_custom_text"><img src="https://haiyong.site/img/icp.png"><a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank">赣ICP备2025056620号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>window.typedJSFn = {
+  init: str => {
+    window.typed = new Typed('#subtitle', Object.assign({
+      strings: str,
+      startDelay: 300,
+      typeSpeed: 150,
+      loop: true,
+      backSpeed: 50,
+    }, null))
+  },
+  run: subtitleType => {
+    if (true) {
+      if (typeof Typed === 'function') {
+        subtitleType()
+      } else {
+        btf.getScript('https://cdn.jsdelivr.net/npm/typed.js/dist/typed.umd.min.js').then(subtitleType)
+      }
+    } else {
+      subtitleType()
+    }
+  },
+  processSubtitle: (content, extraContents = []) => {
+    if (true) {
+      const sub = ["梦想总是遥不可及 &#44; 是不是应该放弃","时人不识凌云木 &#44; 直待凌云始道高"].slice()
+
+      if (extraContents.length > 0) {
+        sub.unshift(...extraContents)
+      }
+
+      if (typeof content === 'string') {
+        sub.unshift(content)
+      } else if (Array.isArray(content)) {
+        sub.unshift(...content)
+      }
+
+      sub.length > 0 && typedJSFn.init(sub)
+    } else {
+      document.getElementById('subtitle').textContent = typeof content === 'string' ? content :
+        (Array.isArray(content) && content.length > 0 ? content[0] : '')
+    }
+  }
+}
+btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
+</script><script>function subtitleType () {
+  typedJSFn.processSubtitle(["梦想总是遥不可及 &#44; 是不是应该放弃","时人不识凌云木 &#44; 直待凌云始道高"])
+}
+typedJSFn.run(subtitleType)</script></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
